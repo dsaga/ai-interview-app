@@ -15,6 +15,7 @@ type Config = {
   experienceLevel: Nullable<TExperienceLevelKeys>;
   questionsNum: Nullable<number>;
   timeLimitPerQuestion: Nullable<number>;
+  sendResultsToEmail: boolean;
   shuffle: boolean;
 };
 
@@ -27,7 +28,7 @@ type Error = {
   type: string;
 };
 
-type Store = {
+export type TStore = {
   errors: Error[];
   user: User;
   questions: Questions;
@@ -41,7 +42,7 @@ type Store = {
   getFirstUnansweredQuestion: () => Nullable<TQuestionEntity>;
 };
 
-const useInterviewStore = create<Store>((set, get) => ({
+const useInterviewStore = create<TStore>((set, get) => ({
   user: {
     email: null,
   },
@@ -51,6 +52,7 @@ const useInterviewStore = create<Store>((set, get) => ({
     experienceLevel: null,
     questionsNum: null,
     timeLimitPerQuestion: null,
+    sendResultsToEmail: false,
     shuffle: true,
   },
   questions: [],
@@ -60,7 +62,7 @@ const useInterviewStore = create<Store>((set, get) => ({
   setErrors: (errors: Error[]) => {
     set({ errors });
     setTimeout(() => {
-      set((state: Store) => {
+      set((state: TStore) => {
         const filteredErrors = state.errors.filter(
           (error) => !errors.includes(error)
         );
@@ -69,13 +71,13 @@ const useInterviewStore = create<Store>((set, get) => ({
     }, 10000);
   },
   setAnswer: (questionId: string, answer: string, timeTaken: number) =>
-    set((state: Store) => {
+    set((state: TStore) => {
       const answeredQuestion = { questionId, answer, timeTaken };
       const answered = [...state.answered, answeredQuestion];
       return { answered };
     }),
   setConfig: (config: Partial<Config>) =>
-    set((state: Store) => ({ config: { ...state.config, config } })),
+    set((state: TStore) => ({ config: { ...state.config, ...config } })),
   setUser: (user: User) => set({ ...user, user }),
   getFirstUnansweredQuestion: () => {
     const { questions, answered } = get();

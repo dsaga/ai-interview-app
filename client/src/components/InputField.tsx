@@ -4,15 +4,17 @@ type Props = {
   id: string;
   required?: boolean;
   label: string;
+  placeholder?: string;
   type: "email" | "text" | "textarea";
   onChange?: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
   children?: ReactNode;
 };
 
-function InputField({ label, id, type, required = true, onChange, children }: Props) {
+function InputField({ label, id, type, required = true, onChange, placeholder = 'Enter value', children }: Props) {
   const inputProps = {
     id: id,
     name: id,
+    placeholder: placeholder,
     type,
     autoComplete: type === "email" ? "email" : undefined,
     required,

@@ -1,6 +1,15 @@
+import { generateAnswersPrompt, processAnswers } from "../answers";
 import { findQuestionByValue } from "../queries/findQuestionByQuery";
+import { findResultById } from "../queries/findResultById";
+import { saveResults } from "../queries/saveResults";
 import { generateQuestionsPrompt, sendAndProcessQuestions } from "../questions";
-import { SCHEMA, TGetQuestionsResponseDto } from "shared";
+import {
+  SCHEMA,
+  TPostEvaluateAnswers,
+  TGetQuestionsResponse,
+  TPostEvaluateAnswersResponse,
+  TScoreEntity,
+} from "shared";
 
 export class QuestionsController {
   db: FirebaseFirestore.Firestore;
@@ -8,10 +17,50 @@ export class QuestionsController {
     this.db = db;
   }
 
-  async callGenerateQuestions(data: any): Promise<TGetQuestionsResponseDto> {
+  async callGetResults(data: any): Promise<TScoreEntity | null> {
+    try {
+      if (!data.resultId) throw new Error("No id provided");
+
+      const result = (await findResultById(this.db, data.resultId)).data();
+
+      if (result) {
+        return result.data();
+      } else {
+        throw new Error("invalid id provided");
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async callEvaluateAnswers(data: any): Promise<TPostEvaluateAnswersResponse> {
+    const { answers, questions } = (await SCHEMA.evaluateAnswersSchema.validate(
+      data
+    )) as TPostEvaluateAnswers;
+
+    // genrate a query baseed on the questions and answers arrays, to concatonate the questions and answers into one array of strings to be sent to the model
+
+    const answersGroup = questions.map((question, index) => {
+      return `${question.id}) question[ ${question.questionText}] -> answer[${answers[index].answer}]`;
+    });
+
+    const query = generateAnswersPrompt(answersGroup);
+
+    const processedAnswers = await processAnswers(query);
+
+    const score = {
+      questions: processedAnswers.questions ? processedAnswers.questions : [],
+      totalScore:
+        processedAnswers.questions.reduce((acc, curr) => acc + curr.score, 0) /
+        processedAnswers.questions.length,
+    };
+
+    return saveResults(this.db, score);
+  }
+
+  async callGenerateQuestions(data: any): Promise<TGetQuestionsResponse> {
     const { role, experienceLevel, questionsNum } =
-      await SCHEMA.questionsQuerySchema
-      .validate(data);
+      await SCHEMA.questionsQuerySchema.validate(data);
 
     const question = generateQuestionsPrompt(
       questionsNum.toString(),
@@ -29,6 +78,6 @@ export class QuestionsController {
 
     const processedQuestions = await sendAndProcessQuestions(this.db, question);
 
-    return processedQuestions.questions as TGetQuestionsResponseDto;
+    return processedQuestions.questions as TGetQuestionsResponse;
   }
 }

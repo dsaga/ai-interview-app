@@ -23,6 +23,15 @@ const db = admin.firestore();
 
 const questionsController = makeQuestionsController(db);
 
+
+export const callGetResults = onCall(async (data) => {
+  return await questionsController.callGetResults(data.data);
+});
+
+export const callEvaluateAnswers = onCall(async (data) => {
+  return await questionsController.callEvaluateAnswers(data.data);
+});
+
 export const callGenerateQuestions = onCall(async (data) => {
   return await questionsController.callGenerateQuestions(data.data);
 });

@@ -7,7 +7,7 @@ const ErrorsProvider: React.FC<{children: React.ReactNode}> = ({ children }) => 
     return (
         <>  
             {errors.length > 0 && (
-                <div className="bg-red-500 text-white p-4 my-2 rounded-sm">
+                <div className="bg-red-500 text-white p-4 my-2 rounded animate-slideDown duration-500 ease-out">
                     {errors.map((error, index) => (
                         <div key={index}>{error.message}</div>
                     ))}

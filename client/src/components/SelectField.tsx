@@ -4,6 +4,7 @@ interface SelectFieldProps {
   id: string;
   name: string;
   label: string;
+  placeholder?: string;
   options: string[] | { key: string; label: string }[];
   onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
 }
@@ -13,6 +14,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   name,
   label,
   options,
+  placeholder = "Enter value",
   onChange,
 }) => {
   return (
@@ -30,6 +32,9 @@ export const SelectField: React.FC<SelectFieldProps> = ({
           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm sm:leading-5"
           onChange={onChange}
         >
+          <option value="" disabled selected>
+            {placeholder}
+          </option>
           {options.map((option) => (
             <>
               {typeof option === "object" && "key" in option ? (

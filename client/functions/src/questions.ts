@@ -25,6 +25,7 @@ export async function sendAndProcessQuestions(
 
     const functionToCall = availableFunctions[functionName];
     const functionArgs = JSON.parse(function_call.arguments);
+    
     await functionToCall(
       db,
       functionArgs.questions,

@@ -13,11 +13,11 @@
   "scripts": {
     "build": "rm -rf dist && npx tsc"
   },
-  "dependencies": {
-    "yup": "^1.3.2"
-  },
   "devDependencies": {
     "nodemon": "^2.0.22",
     "typescript": "^5.0.2"
+  },
+  "dependencies": {
+    "yup": "^1.3.2"
   }
 }

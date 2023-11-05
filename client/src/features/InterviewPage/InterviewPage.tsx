@@ -1,13 +1,26 @@
 import { ButtonPrimary } from "@/components/ButtonPrimary";
 import InputField from "@/components/InputField";
+import Loader from "@/components/Loader";
 import { PageHeadline } from "@/components/PageHeadline";
-import { Timer } from "@/components/Timer";
+import { Timer, TimerRef } from "@/components/Timer";
+import { useFirebase } from "@/providers/FirebaseProvider";
 import useInterviewStore from "@/store/useInterviewStore";
-import { useMemo, useState } from "react";
+import { httpsCallable } from "firebase/functions";
+import { useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { TPostEvaluateAnswers, TPostEvaluateAnswersResponse } from "shared";
 
 export function InterviewPage() {
+  const navigate = useNavigate();
+  const timerRef = useRef<TimerRef | null>(null);
   const [myAnswer, setMyAnswer] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { functions } = useFirebase();
+
+  const sendAnswers = httpsCallable<
+    TPostEvaluateAnswers,
+    TPostEvaluateAnswersResponse
+  >(functions, "callEvaluateAnswers");
 
   const getFirstUnansweredQuestion = useInterviewStore(
     (store) => store.getFirstUnansweredQuestion
@@ -23,26 +36,67 @@ export function InterviewPage() {
   const config = useInterviewStore((store) => store.config);
   const setAnswer = useInterviewStore((store) => store.setAnswer);
 
-  const handleSubmitAnswer = () => {
+  const handleSendAnswers = async () => {
+    // if no more questions, submit
+    const { questions, answered } = useInterviewStore.getState();
+
+    const score = await sendAnswers({
+      answers: answered,
+      questions: questions,
+    });
+
+    // set results to state
+    navigate(`/results/${score.data.resultId}`);
+  };
+
+  const handleSubmitAnswer = async () => {
     if (unansweredQuestion) {
       // add loader
       setIsLoading(true);
       // update timelimit to corerctly set based on elapsed time
-      setAnswer(unansweredQuestion.id, myAnswer, config.timeLimitPerQuestion!);
+      setAnswer(
+        unansweredQuestion.id,
+        myAnswer,
+        timerRef.current?.getTime() || 0
+      );
 
-      // remove loader
-      setIsLoading(false);
+      setTimeout(() => {
+        setMyAnswer("");
+      },0);
+
+      // if last question
+      if (answered.length + 1 === config.questionsNum) {
+        setTimeout(async () => {
+          await handleSendAnswers();
+          setIsLoading(false);
+        }, 0);
+      } else {
+        // if not last question
+        // remove loader
+        setIsLoading(false);
+      }
     }
   };
 
   return (
     <>
-      <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
-        {unansweredQuestion && !isLoading ? (
+      <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 animate-slideDown duration-500 ease-out">
+        <Loader isLoading={Boolean(!unansweredQuestion || isLoading)}>
           <section>
             <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-              <PageHeadline>{unansweredQuestion.questionText}</PageHeadline>
-              <Timer timeMin={1} />
+              <p className="my-5 text-left text-1  text-gray-600">
+                Question {answered.length + 1} of {config.questionsNum}
+              </p>
+              <PageHeadline>{unansweredQuestion!.questionText}</PageHeadline>
+              <p className="my-5 text-left text-1  text-gray-600">
+                Answer with as much detail as possible for a better grade.
+              </p>
+              <Timer
+                key={unansweredQuestion?.id}
+                ref={timerRef}
+                timeMin={config.timeLimitPerQuestion!}
+                onExpired={handleSubmitAnswer}
+              />
             </div>
 
             <div className=" bg-white mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
@@ -58,7 +112,7 @@ export function InterviewPage() {
                     id="answer"
                     type="textarea"
                     required
-                    label="Email address"
+                    label="Your answer"
                     onChange={(e) => setMyAnswer(e.target.value)}
                   />
                 </div>
@@ -69,11 +123,7 @@ export function InterviewPage() {
               </form>
             </div>
           </section>
-        ) : (
-          <div className="flex items-center justify-center h-screen">
-            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
-          </div>
-        )}
+        </Loader>
       </div>
     </>
   );
