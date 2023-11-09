@@ -23,7 +23,6 @@ const db = admin.firestore();
 
 const questionsController = makeQuestionsController(db);
 
-
 export const callGetResults = onCall(async (data) => {
   return await questionsController.callGetResults(data.data);
 });

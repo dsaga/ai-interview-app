@@ -62,7 +62,7 @@ export function InterviewPage() {
 
       setTimeout(() => {
         setMyAnswer("");
-      },0);
+      }, 0);
 
       // if last question
       if (answered.length + 1 === config.questionsNum) {
@@ -109,6 +109,7 @@ export function InterviewPage() {
               >
                 <div>
                   <InputField
+                    value={myAnswer}
                     id="answer"
                     type="textarea"
                     required

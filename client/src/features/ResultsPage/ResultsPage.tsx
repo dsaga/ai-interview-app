@@ -10,7 +10,7 @@ export function ResultsPage() {
   const { functions } = useFirebase();
 
   const getResults = useCallback(
-    httpsCallable<{ resultId: string }, TScoreEntity>(
+    httpsCallable<{ resultId: string }, { results: TScoreEntity }>(
       functions,
       "callGetResults"
     ),
@@ -21,7 +21,8 @@ export function ResultsPage() {
     const getResult = async () => {
       if (!params.resultId) return;
       const result = await getResults({ resultId: params.resultId });
-      setScore(result.data);
+      console.log(result);
+      setScore(result.data.results);
     };
 
     getResult();
@@ -30,5 +31,9 @@ export function ResultsPage() {
     };
   }, [params.resultId]);
 
-  return <>{params.resultId}  {score?.totalScore}</>;
+  return (
+    <>
+      {params.resultId} {score?.totalScore}
+    </>
+  );
 }

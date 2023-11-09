@@ -2,6 +2,7 @@ import { generateAnswersPrompt, processAnswers } from "../answers";
 import { findQuestionByValue } from "../queries/findQuestionByQuery";
 import { findResultById } from "../queries/findResultById";
 import { saveResults } from "../queries/saveResults";
+import * as logger from "firebase-functions/logger";
 import { generateQuestionsPrompt, sendAndProcessQuestions } from "../questions";
 import {
   SCHEMA,
@@ -21,14 +22,15 @@ export class QuestionsController {
     try {
       if (!data.resultId) throw new Error("No id provided");
 
-      const result = (await findResultById(this.db, data.resultId)).data();
+      const result = (await findResultById(this.db, data.resultId));
 
       if (result) {
-        return result.data();
+        return result as TScoreEntity;
       } else {
         throw new Error("invalid id provided");
       }
     } catch (e) {
+      logger.error(e);
       return null;
     }
   }
@@ -40,11 +42,14 @@ export class QuestionsController {
 
     // genrate a query baseed on the questions and answers arrays, to concatonate the questions and answers into one array of strings to be sent to the model
 
-    const answersGroup = questions.map((question, index) => {
-      return `${question.id}) question[ ${question.questionText}] -> answer[${answers[index].answer}]`;
-    });
+    const query = generateAnswersPrompt(JSON.stringify({ answers, questions }));
 
-    const query = generateAnswersPrompt(answersGroup);
+    logger.info(
+      {
+        query,
+      },
+      { structuredData: true }
+    );
 
     const processedAnswers = await processAnswers(query);
 
