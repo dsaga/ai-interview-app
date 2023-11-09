@@ -12,7 +12,7 @@ export async function apiAnswerQuestions(query: string) {
     {
       name: "process_answers",
       description:
-        "Create a list of questions for a tech interview for a given role and seniority level.",
+        "Score a list of answers for a tech interview questions for a given role and seniority level.",
       parameters: {
         type: "object",
         properties: {
