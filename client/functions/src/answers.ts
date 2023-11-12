@@ -4,7 +4,7 @@ import { apiAnswerQuestions } from "./api/apiAnswerQuestions";
 
 export const generateAnswersPrompt = (answers: string) => {
   return [
-    "Can you take the following list of questions and answers in JSON format, and validate the answers for each question matching by id, and return the score for each question? ",
+    "Can you take the following list of questions and answers in JSON format, and validate the answers for each question matching by id, and return the score for each question, the score being from 0 - 10, 10 being a perfect answer, and 0 being an invalid or wrong answer. ",
     answers,
   ].join(" --- ");
 };

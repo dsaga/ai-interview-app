@@ -34,19 +34,25 @@ export type TStore = {
   questions: Questions;
   answered: AnweredQuestion[];
   config: Config;
+};
+
+export type TStoreActions = {
   setErrors: (errors: Error[]) => void;
   setQuestions: (questions: Questions) => void;
   setAnswer: (questionId: string, answer: string, timeTaken: number) => void;
   setConfig: (config: Partial<Config>) => void;
   setUser: (user: User) => void;
   getFirstUnansweredQuestion: () => Nullable<TQuestionEntity>;
+  reset: () => void;
 };
 
-const useInterviewStore = create<TStore>((set, get) => ({
+const initialStoreState = {
   user: {
     email: null,
   },
   errors: [],
+  questions: [],
+  answered: [],
   config: {
     role: null,
     experienceLevel: null,
@@ -55,9 +61,10 @@ const useInterviewStore = create<TStore>((set, get) => ({
     sendResultsToEmail: false,
     shuffle: true,
   },
-  questions: [],
-  answered: [],
-  // setErrors: (errors: Error[]) => set({ errors }),
+};
+
+const useInterviewStore = create<TStore & TStoreActions>((set, get) => ({
+  ...initialStoreState,
   setQuestions: (questions: Questions) => set({ questions }),
   setErrors: (errors: Error[]) => {
     set({ errors });
@@ -89,6 +96,9 @@ const useInterviewStore = create<TStore>((set, get) => ({
     );
 
     return unansweredQuestions.length > 0 ? unansweredQuestions[0] : null;
+  },
+  reset: () => {
+    set(initialStoreState);
   },
 }));
 
